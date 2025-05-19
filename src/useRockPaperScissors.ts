@@ -1,6 +1,6 @@
-import {createContext, useContext, useState} from 'react';
+import {createContext, useContext, useRef, useState} from 'react';
 import {genConfig, type AvatarFullConfig} from 'react-nice-avatar';
-import {invariant, toaster} from './utils';
+import {invariant} from './utils';
 
 export interface Score {
   wins: number;
@@ -14,28 +14,28 @@ export interface Player {
   avatar: AvatarFullConfig;
 }
 
-export interface Playing {
+export interface Details__Playing {
   status: 'PLAYING';
   player: Player;
   round: number;
   score: Score;
 }
 
-export interface Finished {
+export interface Details__Finished {
   status: 'FINISHED';
   player: Player;
   round: number;
   score: Score;
 }
 
-export interface Waiting {
+export interface Details__Waiting {
   status: 'WAITING';
   player?: never;
   round?: never;
   score?: never;
 }
 
-export type Details = Playing | Finished | Waiting;
+export type Details = Details__Playing | Details__Finished | Details__Waiting;
 
 export type Choice = 'ROCK' | 'PAPER' | 'SCISSORS';
 
@@ -45,6 +45,36 @@ export interface LeaderboardEntry {
   totalRounds: number;
 }
 
+export type RockPaperScissorsEvent =
+  | {
+      type: 'ROUND_COMPLETE';
+      status: 'WIN' | 'LOSS' | 'TIE';
+      details: Details__Playing;
+    }
+  | {
+      type: 'GAME_COMPLETE';
+      status: 'WIN' | 'LOSS';
+      details: Details__Finished;
+    }
+  | {
+      type: 'LEADERBOARD_ACHIEVED';
+      details: Details__Finished | Details__Playing;
+    }
+  | {
+      type: 'GAME_ENDED';
+      details?: never;
+    }
+  | {
+      type: 'GAME_RESTARTED';
+      details?: Details__Finished;
+    }
+  | {
+      type: 'GAME_REQUEST';
+      details?: never;
+    };
+
+export type Subscriber = (event: RockPaperScissorsEvent) => void;
+
 export interface UseRockPaperScissorsReturn {
   startGame: (playerName: string) => void;
   restartGame: () => void;
@@ -52,9 +82,20 @@ export interface UseRockPaperScissorsReturn {
   pick: (choice: Choice) => void;
   details: Details;
   leaderboard: LeaderboardEntry[];
+  subscribe: (subscriber: Subscriber) => () => void;
 }
 
 export function useRockPaperScissors(): UseRockPaperScissorsReturn {
+  const subscribers = useRef<Subscriber[]>([]);
+
+  function subscribe(subscriber: Subscriber) {
+    subscribers.current.push(subscriber);
+
+    return () => {
+      subscribers.current = subscribers.current.filter((s) => s !== subscriber);
+    };
+  }
+
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   const [details, setStatus] = useState<Details>({
@@ -82,10 +123,23 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     setStatus({
       status: 'WAITING',
     });
+
+    subscribers.current.forEach((subscriber) => {
+      subscriber({
+        type: 'GAME_ENDED',
+      });
+    });
   }
 
   function restartGame() {
     if (details.status !== 'FINISHED') return;
+
+    subscribers.current.forEach((subscriber) => {
+      subscriber({
+        type: 'GAME_RESTARTED',
+        details,
+      });
+    });
 
     setStatus((prev) => {
       invariant(prev.status === 'FINISHED');
@@ -139,9 +193,11 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
 
     if (!shouldAddToLeaderboard) return;
     if (!isOnLeaderboard) {
-      toaster.success({
-        title: 'Congratulations! 🎉',
-        description: 'You made it to the leaderboard! 💪🏆',
+      subscribers.current.forEach((subscriber) => {
+        subscriber({
+          type: 'LEADERBOARD_ACHIEVED',
+          details: value,
+        });
       });
     }
 
@@ -194,6 +250,14 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
         },
       });
 
+      subscribers.current.forEach((subscriber) => {
+        subscriber({
+          type: 'ROUND_COMPLETE',
+          status: 'TIE',
+          details,
+        });
+      });
+
       return;
     }
 
@@ -224,6 +288,14 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
         },
       });
 
+      subscribers.current.forEach((subscriber) => {
+        subscriber({
+          type: 'ROUND_COMPLETE',
+          status: 'WIN',
+          details,
+        });
+      });
+
       return;
     }
 
@@ -252,6 +324,22 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
         },
       });
 
+      subscribers.current.forEach((subscriber) => {
+        subscriber({
+          type: 'GAME_COMPLETE',
+          status: 'LOSS',
+          details: {
+            ...details,
+            status: 'FINISHED',
+            round: details.round + 1,
+            score: {
+              ...details.score,
+              losses: 3,
+            },
+          },
+        });
+      });
+
       return;
     }
 
@@ -275,6 +363,14 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
         losses: details.score.losses + 1,
       },
     });
+
+    subscribers.current.forEach((subscriber) => {
+      subscriber({
+        type: 'ROUND_COMPLETE',
+        status: 'LOSS',
+        details,
+      });
+    });
   }
 
   return {
@@ -284,6 +380,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     pick,
     details,
     leaderboard,
+    subscribe,
   };
 }
 

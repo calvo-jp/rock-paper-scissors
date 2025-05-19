@@ -15,12 +15,15 @@ import {
   UserIcon,
   XIcon,
 } from 'lucide-react';
-import {createContext, useContext} from 'react';
+import {createContext, useContext, useEffect, useState} from 'react';
 import CountUp from 'react-countup';
 import {useForm} from 'react-hook-form';
 import Avatar from 'react-nice-avatar';
 import {twMerge} from 'tailwind-merge';
 import {z} from 'zod';
+import emojiCrying from './emoji-crying.gif';
+import emojiMindBlowing from './emoji-mind-blowing.gif';
+import emojiSunGlasses from './emoji-sun-glasses.gif';
 import {PaperIcon} from './PaperIcon';
 import {RockIcon} from './RockIcon';
 import {ScissorsIcon} from './ScissorsIcon';
@@ -29,6 +32,7 @@ import {
   useRockPaperScissors,
   useRockPaperScissorsContext,
   type LeaderboardEntry,
+  type RockPaperScissorsEvent,
   type Score,
 } from './useRockPaperScissors';
 import {invariant} from './utils';
@@ -81,7 +85,137 @@ export function RockPaperScissors() {
 
         <Footer />
       </div>
+
+      <GameRoundAlerts />
     </RockPaperScissorsContext>
+  );
+}
+
+function GameRoundAlerts() {
+  const rockPaperScissors = useRockPaperScissorsContext();
+
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState<Extract<
+    RockPaperScissorsEvent,
+    {type: 'ROUND_COMPLETE'} | {type: 'GAME_COMPLETE'}
+  > | null>(null);
+
+  const forcedOpen = data?.details?.status === 'FINISHED';
+
+  useEffect(() => {
+    const unsubscribe = rockPaperScissors.subscribe((event) => {
+      if (event.type === 'ROUND_COMPLETE' || event.type === 'GAME_COMPLETE') {
+        setData(event);
+        setOpen(true);
+      }
+    });
+    return unsubscribe;
+  }, [rockPaperScissors]);
+
+  return (
+    <Dialog.Root
+      open={forcedOpen ? true : open}
+      onOpenChange={(details) => {
+        setOpen(details.open);
+      }}
+      lazyMount
+      unmountOnExit
+    >
+      <Portal>
+        <Dialog.Backdrop className="fixed inset-0 bg-black/25 backdrop-blur-sm ui-open:animate-backdrop-in ui-closed:animate-backdrop-out" />
+        <Dialog.Positioner className="fixed inset-0 flex items-center justify-center">
+          <Dialog.Content className="w-[32rem] p-12 text-neutral-800 bg-white rounded-2xl ui-open:animate-dialog-in ui-closed:animate-dialog-out relative shadow-lg">
+            <div className="flex flex-col items-center">
+              {data?.type === 'ROUND_COMPLETE' && (
+                <>
+                  {data.status === 'WIN' && (
+                    <>
+                      <img src={emojiSunGlasses} alt="" className="w-40 h-auto" />
+                      <h2 className="mt-6 text-2xl font-heading font-bold">You won!</h2>
+                      <p className="text-neutral-700">Keep it up!</p>
+                    </>
+                  )}
+
+                  {data.status === 'LOSS' && (
+                    <>
+                      <img src={emojiCrying} alt="" className="w-40 h-auto" />
+                      <h2 className="mt-6 text-2xl font-heading font-bold">You Lost!</h2>
+                      <p className="text-neutral-700">Try harder!</p>
+                    </>
+                  )}
+
+                  {data.status === 'TIE' && (
+                    <>
+                      <img src={emojiMindBlowing} alt="" className="w-40 h-auto" />
+                      <h2 className="mt-6 text-2xl font-heading font-bold">It's a draw!</h2>
+                      <p className="text-neutral-700">Oooopss!</p>
+                    </>
+                  )}
+                </>
+              )}
+
+              {data?.type === 'GAME_COMPLETE' && (
+                <>
+                  {data.status === 'WIN' && (
+                    <>
+                      <img src={emojiSunGlasses} alt="" className="w-40 h-auto" />
+                      <h2 className="mt-6 text-2xl font-heading font-bold">Congratulations! 🎉</h2>
+                      <p className="text-neutral-700">You won the game!</p>
+                    </>
+                  )}
+
+                  {data.status === 'LOSS' && (
+                    <>
+                      <img src={emojiCrying} alt="" className="size-40" />
+                      <p className="mt-6 text-2xl font-heading font-bold">You lost the game.</p>
+                      <h2 className="text-neutral-700">Better luck next time</h2>
+                    </>
+                  )}
+                </>
+              )}
+
+              {data?.type === 'ROUND_COMPLETE' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    rockPaperScissors.restartGame();
+                    setOpen(false);
+                  }}
+                  className="mt-12 text-lg rounded-full font-bold font-heading bg-teal-900 text-white h-14 block w-full"
+                >
+                  Okay
+                </button>
+              )}
+
+              {data?.type === 'GAME_COMPLETE' && (
+                <div className="mt-12 w-full flex gap-4">
+                  <button
+                    onClick={() => {
+                      rockPaperScissors.endGame();
+                      setOpen(false);
+                      setData(null);
+                    }}
+                    className="text-lg rounded-full font-bold font-heading text-red-600 h-14 block w-full bg-red-100"
+                  >
+                    Quit
+                  </button>
+                  <button
+                    onClick={() => {
+                      rockPaperScissors.restartGame();
+                      setOpen(false);
+                      setData(null);
+                    }}
+                    className="text-lg rounded-full font-bold font-heading bg-teal-900 text-white h-14 block w-full"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+            </div>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
   );
 }
 
