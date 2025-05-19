@@ -16,6 +16,7 @@ import {
   XIcon,
 } from 'lucide-react';
 import {createContext, useContext, useEffect, useState} from 'react';
+import Confetti from 'react-confetti-explosion';
 import CountUp from 'react-countup';
 import {useForm} from 'react-hook-form';
 import Avatar from 'react-nice-avatar';
@@ -130,6 +131,7 @@ function GameRoundAlerts() {
                 <>
                   {data.status === 'WIN' && (
                     <>
+                      <Confetti force={0.4} duration={2200} particleCount={30} width={400} />
                       <img src={emojiSunGlasses} alt="" className="w-40 h-auto" />
                       <h2 className="mt-6 text-2xl font-heading font-bold">You won!</h2>
                       <p className="text-neutral-700">Keep it up!</p>
@@ -151,65 +153,49 @@ function GameRoundAlerts() {
                       <p className="text-neutral-700">Oooopss!</p>
                     </>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      rockPaperScissors.restartGame();
+                      setOpen(false);
+                    }}
+                    className="mt-12 text-lg rounded-full font-bold font-heading bg-teal-900 text-white h-14 block w-full"
+                  >
+                    Okay
+                  </button>
                 </>
               )}
 
               {data?.type === 'GAME_COMPLETE' && (
                 <>
-                  {data.status === 'WIN' && (
-                    <>
-                      <img src={emojiSunGlasses} alt="" className="w-40 h-auto" />
-                      <h2 className="mt-6 text-2xl font-heading font-bold">Congratulations! 🎉</h2>
-                      <p className="text-neutral-700">You won the game!</p>
-                    </>
-                  )}
+                  <img src={emojiSunGlasses} alt="" className="w-40 h-auto" />
+                  <h2 className="mt-6 text-2xl font-heading font-bold">Congratulations! 🎉</h2>
+                  <p className="text-neutral-700">You won the game!</p>
 
-                  {data.status === 'LOSS' && (
-                    <>
-                      <img src={emojiCrying} alt="" className="size-40" />
-                      <p className="mt-6 text-2xl font-heading font-bold">You lost the game.</p>
-                      <h2 className="text-neutral-700">Better luck next time</h2>
-                    </>
-                  )}
+                  <div className="mt-12 w-full flex gap-4">
+                    <button
+                      onClick={() => {
+                        rockPaperScissors.endGame();
+                        setOpen(false);
+                        setData(null);
+                      }}
+                      className="text-lg rounded-full font-bold font-heading text-red-600 h-14 block w-full bg-red-100"
+                    >
+                      Quit
+                    </button>
+                    <button
+                      onClick={() => {
+                        rockPaperScissors.restartGame();
+                        setOpen(false);
+                        setData(null);
+                      }}
+                      className="text-lg rounded-full font-bold font-heading bg-teal-900 text-white h-14 block w-full"
+                    >
+                      Retry
+                    </button>
+                  </div>
                 </>
-              )}
-
-              {data?.type === 'ROUND_COMPLETE' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    rockPaperScissors.restartGame();
-                    setOpen(false);
-                  }}
-                  className="mt-12 text-lg rounded-full font-bold font-heading bg-teal-900 text-white h-14 block w-full"
-                >
-                  Okay
-                </button>
-              )}
-
-              {data?.type === 'GAME_COMPLETE' && (
-                <div className="mt-12 w-full flex gap-4">
-                  <button
-                    onClick={() => {
-                      rockPaperScissors.endGame();
-                      setOpen(false);
-                      setData(null);
-                    }}
-                    className="text-lg rounded-full font-bold font-heading text-red-600 h-14 block w-full bg-red-100"
-                  >
-                    Quit
-                  </button>
-                  <button
-                    onClick={() => {
-                      rockPaperScissors.restartGame();
-                      setOpen(false);
-                      setData(null);
-                    }}
-                    className="text-lg rounded-full font-bold font-heading bg-teal-900 text-white h-14 block w-full"
-                  >
-                    Retry
-                  </button>
-                </div>
               )}
             </div>
           </Dialog.Content>
