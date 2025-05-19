@@ -40,31 +40,38 @@ export function RockPaperScissors() {
       <div className="flex flex-col min-h-dvh">
         <Navbar />
 
-        <main className="flex flex-col p-16 max-w-[800px] mx-auto items-center justify-center grow">
+        <main className="flex flex-col p-16 max-w-[850px] mx-auto items-center justify-center grow">
           <h1 className="text-5xl font-bold font-heading">Rock Paper Scissors</h1>
           <nav className="mt-32 grid grid-cols-3 gap-10">
             <button
               type="button"
-              className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200"
+              className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200 disabled:cursor-default"
               aria-label="Rock"
+              disabled={rockPaperScissors.details.status !== 'PLAYING'}
+              onClick={() => rockPaperScissors.pick('ROCK')}
             >
               <RockIcon className="w-full aspect-square text-teal-100" />
             </button>
             <button
               type="button"
-              className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200"
+              className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200 disabled:cursor-default"
               aria-label="Paper"
+              disabled={rockPaperScissors.details.status !== 'PLAYING'}
+              onClick={() => rockPaperScissors.pick('PAPER')}
             >
               <PaperIcon className="w-full aspect-square text-teal-100" />
             </button>
             <button
               type="button"
-              className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200"
+              className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200 disabled:cursor-default"
               aria-label="Scissors"
+              disabled={rockPaperScissors.details.status !== 'PLAYING'}
+              onClick={() => rockPaperScissors.pick('SCISSORS')}
             >
               <ScissorsIcon className="w-full aspect-square text-teal-100" />
             </button>
           </nav>
+
           <div className="mt-28 w-full">
             <PlayGame />
             <GameStatus />
@@ -91,11 +98,7 @@ function GameStatus() {
 
       <div className="font-mono flex items-center gap-1">
         <span className="text-sm leading-none text-white/75">Round</span>
-        <CountUp
-          start={1}
-          end={rockPaperScissors.details.round}
-          className="font-bold text-2xl leading-none"
-        />
+        <span className="font-bold text-2xl leading-none">{rockPaperScissors.details.round}</span>
       </div>
 
       <div className="flex gap-3 items-center">
@@ -119,15 +122,15 @@ function GameScore({score}: {score: Score}) {
     <div className="flex font-mono items-center gap-4">
       <div className="text-emerald-400 flex items-center gap-2">
         <TrendingUpIcon className="size-4" />
-        <CountUp start={0} end={score.wins} />
+        <span>{score.wins}</span>
       </div>
       <div className="text-rose-400 flex items-center gap-2">
         <TrendingDownIcon className="size-4" />
-        <CountUp start={0} end={score.losses} />
+        <span>{score.losses}</span>
       </div>
       <div className="text-amber-400 flex items-center gap-2">
         <TrendingUpDownIcon className="size-4" />
-        <CountUp start={0} end={score.ties} />
+        <span>{score.ties}</span>
       </div>
     </div>
   );
@@ -352,15 +355,15 @@ function LeaderboardItem() {
         <div className="flex text-xs font-mono items-center gap-2">
           <div className="text-emerald-500 flex items-center gap-1">
             <TrendingUpIcon className="size-3" />
-            <CountUp start={0} end={entry.score.wins} />
+            <CountUp start={0} end={entry.score.wins} preserveValue />
           </div>
           <div className="text-rose-500 flex items-center gap-1">
             <TrendingDownIcon className="size-3" />
-            <CountUp start={0} end={entry.score.losses} />
+            <CountUp start={0} end={entry.score.losses} preserveValue />
           </div>
           <div className="text-amber-500 flex items-center gap-1">
             <TrendingUpDownIcon className="size-3" />
-            <CountUp start={0} end={entry.score.ties} />
+            <CountUp start={0} end={entry.score.ties} preserveValue />
           </div>
         </div>
       </div>
