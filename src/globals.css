@@ -5,12 +5,14 @@
   --font-sans: 'Lato', --apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
     Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 
-  --animate-fade-in: fade-in 0.2s ease-in-out;
-  --animate-fade-out: fade-out 0.2s ease-in-out;
-  --animate-scalefade-in: scalefade-in 0.2s ease-in-out;
-  --animate-scalefade-out: scalefade-out 0.2s ease-in-out;
+  --animate-backdrop-in: backdrop-in 400ms cubic-bezier(0.05, 0.7, 0.1, 1);
+  --animate-backdrop-out: backdrop-out 250ms cubic-bezier(0.3, 0, 0.8, 0.15);
+  --animate-dialog-in: dialog-in 400ms cubic-bezier(0.05, 0.7, 0.1, 1);
+  --animate-dialog-out: dialog-out 200ms cubic-bezier(0.3, 0, 0.8, 0.15);
+  --animate-drawer-in: drawer-in 400ms cubic-bezier(0.05, 0.7, 0.1, 1);
+  --animate-drawer-out: drawer-out 200ms cubic-bezier(0.3, 0, 0.8, 0.15);
 
-  @keyframes fade-in {
+  @keyframes backdrop-in {
     0% {
       opacity: 0;
     }
@@ -19,7 +21,7 @@
     }
   }
 
-  @keyframes fade-out {
+  @keyframes backdrop-out {
     0% {
       opacity: 1;
     }
@@ -28,7 +30,7 @@
     }
   }
 
-  @keyframes scalefade-in {
+  @keyframes dialog-in {
     0% {
       opacity: 0;
       transform: scale(0.9);
@@ -39,7 +41,7 @@
     }
   }
 
-  @keyframes scalefade-out {
+  @keyframes dialog-out {
     0% {
       opacity: 1;
       transform: scale(1);
@@ -47,6 +49,24 @@
     100% {
       opacity: 0;
       transform: scale(0.9);
+    }
+  }
+
+  @keyframes drawer-in {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes drawer-out {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(100%);
     }
   }
 }

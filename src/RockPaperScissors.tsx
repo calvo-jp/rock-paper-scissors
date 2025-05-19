@@ -2,6 +2,7 @@ import {Dialog, Field, Menu, Portal} from '@ark-ui/react';
 import {
   CopyrightIcon,
   Gamepad2Icon,
+  MedalIcon,
   PowerIcon,
   ScissorsLineDashed,
   Settings,
@@ -64,9 +65,9 @@ function PlayButton() {
         </button>
       </Dialog.Trigger>
       <Portal>
-        <Dialog.Backdrop className="fixed inset-0 bg-black/25 backdrop-blur-sm ui-open:animate-fade-in ui-closed:animate-fade-out" />
+        <Dialog.Backdrop className="fixed inset-0 bg-black/25 backdrop-blur-sm ui-open:animate-backdrop-in ui-closed:animate-backdrop-out" />
         <Dialog.Positioner className="fixed inset-0 flex items-center justify-center">
-          <Dialog.Content className="w-[32rem] p-12 bg-teal-900 rounded-2xl ui-open:animate-scalefade-in ui-closed:animate-scalefade-out relative">
+          <Dialog.Content className="w-[32rem] p-12 bg-teal-900 rounded-2xl ui-open:animate-dialog-in ui-closed:animate-dialog-out relative shadow-lg">
             <Dialog.CloseTrigger className="absolute top-4 right-4 opacity-50 hover:opacity-100 transition-opacity duration-200">
               <XIcon className="size-5" />
             </Dialog.CloseTrigger>
@@ -117,8 +118,25 @@ function Navbar() {
             </Menu.Positioner>
           </Portal>
         </Menu.Root>
+
+        <Leaderboard />
       </div>
     </header>
+  );
+}
+
+function Leaderboard() {
+  return (
+    <Dialog.Root>
+      <Dialog.Trigger aria-label="Leaderboard">
+        <MedalIcon className="size-5" />
+      </Dialog.Trigger>
+      <Portal>
+        <Dialog.Positioner className="fixed inset-0">
+          <Dialog.Content className="w-96 fixed right-0 bottom-12 top-16 bg-white shadow-lg rounded-l-2xl ui-open:animate-drawer-in ui-closed:animate-drawer-out"></Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
   );
 }
 
