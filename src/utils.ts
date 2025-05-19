@@ -1,3 +1,5 @@
+import {createToaster} from '@ark-ui/react';
+
 export function invariant(condition: unknown): asserts condition {
   if (!condition) {
     const error = new Error();
@@ -6,3 +8,9 @@ export function invariant(condition: unknown): asserts condition {
     throw error;
   }
 }
+
+export const toaster = createToaster({
+  placement: 'bottom-end',
+  overlap: true,
+  max: 5,
+});

@@ -58,18 +58,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   const [details, setStatus] = useState<Details>({
-    status: 'PLAYING',
-    player: {
-      id: window.crypto.randomUUID(),
-      name: 'Player',
-      avatar: genConfig(),
-    },
-    round: 1,
-    score: {
-      wins: 5,
-      losses: 4,
-      ties: 3,
-    },
+    status: 'WAITING',
   });
 
   function play(playerName: string) {
@@ -152,6 +141,44 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
             wins: prev.score.wins + 1,
           },
         };
+      });
+
+      return;
+    }
+
+    if (details.score.losses >= 3) {
+      setStatus((prev) => {
+        invariant(prev.status === 'PLAYING');
+
+        return {
+          ...prev,
+          status: 'FINISHED',
+          round: prev.round + 1,
+          score: {
+            ...prev.score,
+            losses: 3,
+          },
+        };
+      });
+
+      /* 10 maximum leaderboard entries */
+      setLeaderboard((prev) => {
+        const l = [
+          ...prev,
+          {
+            player: details.player,
+            score: details.score,
+            totalRounds: details.round,
+          },
+        ];
+
+        l.sort((a, b) => {
+          if (a.score.wins > b.score.wins) return -1;
+          if (a.score.wins < b.score.wins) return 1;
+          return 0;
+        });
+
+        return l.slice(0, 10);
       });
 
       return;

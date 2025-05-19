@@ -6,6 +6,7 @@ import {
   LaptopMinimalIcon,
   MedalIcon,
   PowerIcon,
+  RefreshCcwIcon,
   ScissorsLineDashed,
   Settings,
   TrendingDownIcon,
@@ -353,17 +354,17 @@ function LeaderboardItem() {
       <div>
         <h2 className="text-sm font-bold">{entry.player.name}</h2>
         <div className="flex text-xs font-mono items-center gap-2">
-          <div className="text-emerald-500 flex items-center gap-1">
+          <div className="text-emerald-500 flex items-center gap-1" title="Total Wins">
             <TrendingUpIcon className="size-3" />
             <CountUp start={0} end={entry.score.wins} preserveValue />
           </div>
-          <div className="text-rose-500 flex items-center gap-1">
-            <TrendingDownIcon className="size-3" />
-            <CountUp start={0} end={entry.score.losses} preserveValue />
-          </div>
-          <div className="text-amber-500 flex items-center gap-1">
+          <div className="text-amber-500 flex items-center gap-1" title="Total Number of Draws">
             <TrendingUpDownIcon className="size-3" />
             <CountUp start={0} end={entry.score.ties} preserveValue />
+          </div>
+          <div className="text-sky-500 flex items-center gap-1" title="Total Rounds">
+            <RefreshCcwIcon className="size-3" />
+            <CountUp start={0} end={entry.totalRounds} preserveValue />
           </div>
         </div>
       </div>
