@@ -137,19 +137,29 @@ function GameScore({score}: {score: Score}) {
   );
 }
 
-const PlayerDefinition = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, 'Name must be at least 2 characters')
-    .max(25, 'Name must be at most 25 characters'),
-});
-
 function PlayGame() {
   const rockPaperScissors = useRockPaperScissorsContext();
 
+  const schema = z.object({
+    name: z
+      .string()
+      .trim()
+      .min(2, 'Name must be at least 2 characters')
+      .max(25, 'Name must be at most 25 characters')
+      .regex(/^[a-zA-Z0-9 ]+$/, 'Name must only contain letters and numbers')
+      .superRefine((value, ctx) => {
+        if (rockPaperScissors.leaderboard.some((entry) => entry.player.name === value)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            fatal: true,
+            message: 'Name is already taken',
+          });
+        }
+      }),
+  });
+
   const form = useForm({
-    resolver: zodResolver(PlayerDefinition),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: '',
     },
@@ -194,7 +204,7 @@ function PlayGame() {
                 <form
                   className="mt-10"
                   onSubmit={form.handleSubmit(({name}) => {
-                    rockPaperScissors.play(name);
+                    rockPaperScissors.startGame(name);
                     api.setOpen(false);
                   })}
                 >
@@ -280,7 +290,7 @@ function UserMenu() {
             <Menu.Item
               value="signOut"
               className="px-4 py-2 w-full flex items-center gap-2 cursor-pointer ui-highlighted:bg-white/5 outline-none rounded-lg transition-colors duration-200"
-              onClick={rockPaperScissors.quit}
+              onClick={rockPaperScissors.endGame}
             >
               <PowerIcon className="size-5" />
               Sign Out
