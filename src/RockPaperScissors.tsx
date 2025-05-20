@@ -26,6 +26,7 @@ import {useTimeout, useWindowSize} from 'usehooks-ts';
 import {z} from 'zod';
 import emojiHandshake from './emoji-handshake.gif';
 import emojiMonocle from './emoji-monocle.gif';
+import emojiSkull from './emoji-skull.gif';
 import emojiThumbsDown from './emoji-thumbs-down.gif';
 import emojiTrophy from './emoji-trophy.gif';
 import {PaperIcon} from './PaperIcon';
@@ -201,8 +202,6 @@ function GameRoundAlerts() {
     {type: 'ROUND_COMPLETE'} | {type: 'GAME_COMPLETE'}
   > | null>(null);
 
-  const forcedOpen = data?.details?.status === 'FINISHED';
-
   useEffect(() => {
     const unsubscribe = rockPaperScissors.subscribe((event) => {
       if (event.type === 'ROUND_COMPLETE' || event.type === 'GAME_COMPLETE') {
@@ -210,12 +209,13 @@ function GameRoundAlerts() {
         setOpen(true);
       }
     });
+
     return unsubscribe;
   }, [rockPaperScissors]);
 
   return (
     <Dialog.Root
-      open={forcedOpen ? true : open}
+      open={open}
       onOpenChange={(details) => {
         setOpen(details.open);
       }}
@@ -233,7 +233,7 @@ function GameRoundAlerts() {
                     <>
                       <img src={emojiTrophy} alt="" className="w-40 h-auto" />
                       <div className="grow text-center">
-                        <h2 className="mt-8 text-2xl font-heading font-bold">You won!</h2>
+                        <h2 className="mt-10 text-2xl font-heading font-bold">You won!</h2>
                         <p className="text-neutral-700">Keep it up!</p>
                       </div>
                     </>
@@ -243,7 +243,7 @@ function GameRoundAlerts() {
                     <>
                       <img src={emojiThumbsDown} alt="" className="w-40 h-auto" />
                       <div className="grow text-center">
-                        <h2 className="mt-8 text-2xl font-heading font-bold">You Lost!</h2>
+                        <h2 className="mt-10 text-2xl font-heading font-bold">You Lost!</h2>
                         <p className="text-neutral-700">Try harder!</p>
                       </div>
                     </>
@@ -253,54 +253,44 @@ function GameRoundAlerts() {
                     <>
                       <img src={emojiHandshake} alt="" className="w-40 h-auto" />
                       <div className="grow text-center">
-                        <h2 className="mt-8 text-2xl font-heading font-bold">It's a draw!</h2>
+                        <h2 className="mt-10 text-2xl font-heading font-bold">It's a draw!</h2>
                         <p className="text-neutral-700">Oooopss!</p>
                       </div>
                     </>
                   )}
 
-                  <button
-                    type="button"
+                  <Dialog.CloseTrigger
                     onClick={() => {
-                      rockPaperScissors.restartGame();
                       setOpen(false);
                     }}
-                    className="mt-12 text-lg rounded-full font-bold font-heading bg-teal-900 text-white h-14 block w-full"
+                    className="text-lg rounded-full font-bold font-heading text-teal-700 h-14 block w-full bg-teal-100"
                   >
                     Okay
-                  </button>
+                  </Dialog.CloseTrigger>
                 </>
               )}
 
               {data?.type === 'GAME_COMPLETE' && (
                 <>
-                  <img src={emojiTrophy} alt="" className="w-40 h-auto" />
-                  <div className="grow text-center">
-                    <h2 className="mt-6 text-2xl font-heading font-bold">Congratulations! 🎉</h2>
-                    <p className="text-neutral-700">You won the game!</p>
+                  <img src={emojiSkull} alt="" className="w-40 h-auto" />
+
+                  <div className="grow mt-10 text-center">
+                    <h2 className="text-2xl font-heading font-bold">Game over!</h2>
+                    <p className="text-neutral-700">Thanks for playing.</p>
                   </div>
 
-                  <div className="mt-12 w-full flex gap-4">
-                    <button
-                      onClick={() => {
-                        rockPaperScissors.endGame();
-                        setOpen(false);
-                        setData(null);
-                      }}
-                      className="text-lg rounded-full font-bold font-heading text-red-600 h-14 block w-full bg-red-100"
-                    >
-                      Quit
-                    </button>
-                    <button
+                  <div className="w-full flex gap-4">
+                    <Dialog.CloseTrigger className="text-lg rounded-full font-bold font-heading text-teal-700 h-14 block w-full bg-teal-100">
+                      Close
+                    </Dialog.CloseTrigger>
+                    <Dialog.CloseTrigger
                       onClick={() => {
                         rockPaperScissors.restartGame();
-                        setOpen(false);
-                        setData(null);
                       }}
                       className="text-lg rounded-full font-bold font-heading bg-teal-900 text-white h-14 block w-full"
                     >
                       Retry
-                    </button>
+                    </Dialog.CloseTrigger>
                   </div>
                 </>
               )}
@@ -324,10 +314,26 @@ function GameStatus() {
         <GameScore score={rockPaperScissors.details.score} />
       </div>
 
-      <div className="font-mono flex items-center gap-1">
-        <span className="text-sm leading-none text-white/75">Round</span>
-        <span className="font-bold text-2xl leading-none">{rockPaperScissors.details.round}</span>
-      </div>
+      {rockPaperScissors.details.status === 'PLAYING' ? (
+        <div className="font-mono flex items-center gap-1">
+          <span className="text-sm leading-none text-white/75">Round</span>
+          <span className="font-bold text-2xl leading-none">{rockPaperScissors.details.round}</span>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={twMerge(
+            'w-fit mx-auto px-6 py-3 text-xl bg-teal-800/15 flex items-center justify-center gap-2 rounded-full font-heading font-bold ui-not-open:animate-bounce',
+            rockPaperScissors.details.status !== 'FINISHED' && 'hidden',
+          )}
+          onClick={() => {
+            rockPaperScissors.restartGame();
+          }}
+        >
+          <RefreshCcwIcon className="size-7" />
+          Play Again!
+        </button>
+      )}
 
       <div className="flex gap-3 items-center">
         <div className="size-8 bg-teal-800/30 rounded-full flex items-center justify-center">
@@ -404,17 +410,14 @@ function PlayGame() {
       lazyMount
       unmountOnExit
     >
-      <Dialog.Trigger asChild>
-        <button
-          type="button"
-          className={twMerge(
-            'w-fit mx-auto px-6 py-3 text-xl bg-teal-800/15 flex items-center justify-center gap-2 rounded-full font-heading font-bold ui-not-open:animate-bounce',
-            rockPaperScissors.details.status !== 'WAITING' && 'hidden',
-          )}
-        >
-          <Gamepad2Icon className="size-7" />
-          Play Now!
-        </button>
+      <Dialog.Trigger
+        className={twMerge(
+          'w-fit mx-auto px-6 py-3 text-xl bg-teal-800/15 flex items-center justify-center gap-2 rounded-full font-heading font-bold ui-not-open:animate-bounce',
+          rockPaperScissors.details.status !== 'WAITING' && 'hidden',
+        )}
+      >
+        <Gamepad2Icon className="size-7" />
+        Play Now!
       </Dialog.Trigger>
       <Portal>
         <Dialog.Backdrop className="fixed inset-0 bg-black/25 backdrop-blur-sm ui-open:animate-backdrop-in ui-closed:animate-backdrop-out" />
