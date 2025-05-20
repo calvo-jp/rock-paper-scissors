@@ -1,49 +1,83 @@
-import {createContext, useContext, useRef, useState} from 'react';
-import {genConfig, type AvatarFullConfig} from 'react-nice-avatar';
-import {invariant} from './utils';
+import {createContext, useContext, useRef} from 'react';
+import {genConfig} from 'react-nice-avatar';
+import {useLocalStorage} from 'react-use';
+import invariant from 'tiny-invariant';
+import {z} from 'zod';
 
-export interface Score {
-  wins: number;
-  losses: number;
-  ties: number;
-}
+/**
+ * --------------------------------------------------------
+ *  Definitions
+ * --------------------------------------------------------
+ */
 
-export interface Player {
-  id: string;
-  name: string;
-  avatar: AvatarFullConfig;
-}
+const PlayerDefinition = z.object({
+  id: z.string(),
+  name: z.string(),
+  avatar: z.record(z.any()),
+});
 
-export interface Details__Playing {
-  status: 'PLAYING';
-  player: Player;
-  round: number;
-  score: Score;
-}
+const ScoreDefinition = z.object({
+  wins: z.number(),
+  losses: z.number(),
+  ties: z.number(),
+});
 
-export interface Details__Finished {
-  status: 'FINISHED';
-  player: Player;
-  round: number;
-  score: Score;
-}
+const PlayingDetailsDefinition = z.object({
+  status: z.literal('PLAYING'),
+  player: PlayerDefinition,
+  score: ScoreDefinition,
+  round: z.number(),
+});
 
-export interface Details__Waiting {
-  status: 'WAITING';
-  player?: never;
-  round?: never;
-  score?: never;
-}
+const FinishedDetailsDefinition = z.object({
+  status: z.literal('FINISHED'),
+  player: PlayerDefinition,
+  score: ScoreDefinition,
+  round: z.number(),
+});
 
-export type Details = Details__Playing | Details__Finished | Details__Waiting;
+const WaitingDetailsDefinition = z.object({
+  status: z.literal('WAITING'),
+  player: PlayerDefinition.optional(),
+  round: z.number().optional(),
+  score: ScoreDefinition.optional(),
+});
+
+const DetailsDefinition = z
+  .discriminatedUnion('status', [
+    PlayingDetailsDefinition,
+    FinishedDetailsDefinition,
+    WaitingDetailsDefinition,
+  ])
+  .catch({
+    status: 'WAITING',
+  });
+
+const LeaderboardEntryDefinition = z.object({
+  player: PlayerDefinition,
+  score: ScoreDefinition,
+  totalRounds: z.number(),
+});
+
+const LeaderboardDefinition = z.array(LeaderboardEntryDefinition).max(10).catch([]);
+
+/**
+ * --------------------------------------------------------
+ *  Types
+ * --------------------------------------------------------
+ */
+
+export type Score = z.infer<typeof ScoreDefinition>;
+export type Player = z.infer<typeof PlayerDefinition>;
+export type Details__Playing = z.infer<typeof PlayingDetailsDefinition>;
+export type Details__Finished = z.infer<typeof FinishedDetailsDefinition>;
+export type Details__Waiting = z.infer<typeof WaitingDetailsDefinition>;
+export type Details = z.infer<typeof DetailsDefinition>;
+
+export type LeaderboardEntry = z.infer<typeof LeaderboardEntryDefinition>;
+export type Leaderboard = z.infer<typeof LeaderboardDefinition>;
 
 export type Choice = 'ROCK' | 'PAPER' | 'SCISSORS';
-
-export interface LeaderboardEntry {
-  player: Player;
-  score: Score;
-  totalRounds: number;
-}
 
 export type RockPaperScissorsEvent =
   | {
@@ -96,11 +130,38 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     };
   }
 
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboard, setLeaderboard] = useLocalStorage<LeaderboardEntry[]>(
+    'RockPaperScissors/Leaderboard',
+    [],
+    {
+      raw: false,
+      serializer: (value) => {
+        return JSON.stringify(value);
+      },
+      deserializer: (value) => {
+        return LeaderboardDefinition.parse(JSON.parse(value));
+      },
+    },
+  );
 
-  const [details, setStatus] = useState<Details>({
-    status: 'WAITING',
-  });
+  const [details, setStatus] = useLocalStorage<Details>(
+    'RockPaperScissors/Details',
+    {
+      status: 'WAITING',
+    },
+    {
+      raw: false,
+      serializer: (value) => {
+        return JSON.stringify(value);
+      },
+      deserializer: (value) => {
+        return DetailsDefinition.parse(JSON.parse(value));
+      },
+    },
+  );
+
+  invariant(details);
+  invariant(leaderboard);
 
   function startGame(playerName: string) {
     setStatus({
@@ -132,6 +193,8 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
   }
 
   function restartGame() {
+    invariant(details);
+
     if (details.status !== 'FINISHED') return;
 
     subscribers.current.forEach((subscriber) => {
@@ -142,7 +205,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     });
 
     setStatus((prev) => {
-      invariant(prev.status === 'FINISHED');
+      invariant(prev?.status === 'FINISHED');
 
       return {
         status: 'PLAYING',
@@ -158,12 +221,14 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
   }
 
   function updateLeaderboard(value: Details) {
+    invariant(leaderboard);
+
     if (value.status === 'WAITING') return;
 
     if (leaderboard.length < 10) {
       setLeaderboard((prev) => {
         const l = [
-          ...prev.filter((entry) => entry.player.id !== value.player.id),
+          ...(prev?.filter((entry) => entry.player.id !== value.player.id) ?? []),
           {
             player: value.player,
             score: value.score,
@@ -204,7 +269,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     /* 10 maximum leaderboard entries */
     setLeaderboard((prev) => {
       const l = [
-        ...prev.filter((entry) => entry.player.id !== value.player.id),
+        ...(prev?.filter((entry) => entry.player.id !== value.player.id) ?? []),
         {
           player: value.player,
           score: value.score,
@@ -223,13 +288,15 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
   }
 
   function pick(choice: Choice) {
+    invariant(details);
+
     if (details.status !== 'PLAYING') return;
 
     const computerChoice = randomChoice();
 
     if (choice === computerChoice) {
       setStatus((prev) => {
-        invariant(prev.status === 'PLAYING');
+        invariant(prev?.status === 'PLAYING');
 
         return {
           ...prev,
@@ -267,7 +334,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
       (choice === 'SCISSORS' && computerChoice === 'PAPER')
     ) {
       setStatus((prev) => {
-        invariant(prev.status === 'PLAYING');
+        invariant(prev?.status === 'PLAYING');
 
         return {
           ...prev,
@@ -301,7 +368,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
 
     if (details.score.losses >= 3) {
       setStatus((prev) => {
-        invariant(prev.status === 'PLAYING');
+        invariant(prev?.status === 'PLAYING');
 
         return {
           ...prev,
@@ -344,7 +411,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     }
 
     setStatus((prev) => {
-      invariant(prev.status === 'PLAYING');
+      invariant(prev?.status === 'PLAYING');
 
       return {
         ...prev,

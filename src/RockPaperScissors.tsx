@@ -16,11 +16,12 @@ import {
   XIcon,
 } from 'lucide-react';
 import {createContext, useContext, useEffect, useState} from 'react';
-import Confetti from 'react-confetti-explosion';
+import Confetti from 'react-confetti';
 import CountUp from 'react-countup';
 import {useForm} from 'react-hook-form';
 import Avatar from 'react-nice-avatar';
 import {twMerge} from 'tailwind-merge';
+import invariant from 'tiny-invariant';
 import {z} from 'zod';
 import emojiCrying from './emoji-crying.gif';
 import emojiMindBlowing from './emoji-mind-blowing.gif';
@@ -36,7 +37,6 @@ import {
   type RockPaperScissorsEvent,
   type Score,
 } from './useRockPaperScissors';
-import {invariant} from './utils';
 
 export function RockPaperScissors() {
   const rockPaperScissors = useRockPaperScissors();
@@ -131,7 +131,7 @@ function GameRoundAlerts() {
                 <>
                   {data.status === 'WIN' && (
                     <>
-                      <Confetti force={0.4} duration={2200} particleCount={30} width={400} />
+                      <Confetti width={400} />
                       <img src={emojiSunGlasses} alt="" className="w-40 h-auto" />
                       <h2 className="mt-6 text-2xl font-heading font-bold">You won!</h2>
                       <p className="text-neutral-700">Keep it up!</p>
