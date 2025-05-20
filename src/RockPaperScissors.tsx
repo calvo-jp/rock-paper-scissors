@@ -1,4 +1,4 @@
-import {Dialog, Field, Menu, Portal, Tooltip} from '@ark-ui/react';
+import {Dialog, Field, Menu, Portal, Toast, Toaster, Tooltip} from '@ark-ui/react';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {
   CopyrightIcon,
@@ -22,13 +22,16 @@ import {useForm} from 'react-hook-form';
 import Avatar from 'react-nice-avatar';
 import {twMerge} from 'tailwind-merge';
 import invariant from 'tiny-invariant';
+import {useTimeout, useWindowSize} from 'usehooks-ts';
 import {z} from 'zod';
-import emojiCrying from './emoji-crying.gif';
-import emojiMindBlowing from './emoji-mind-blowing.gif';
-import emojiSunGlasses from './emoji-sun-glasses.gif';
+import emojiHandshake from './emoji-handshake.gif';
+import emojiMonocle from './emoji-monocle.gif';
+import emojiThumbsDown from './emoji-thumbs-down.gif';
+import emojiTrophy from './emoji-trophy.gif';
 import {PaperIcon} from './PaperIcon';
 import {RockIcon} from './RockIcon';
 import {ScissorsIcon} from './ScissorsIcon';
+import {toaster} from './toaster';
 import {
   RockPaperScissorsContext,
   useRockPaperScissors,
@@ -43,7 +46,7 @@ export function RockPaperScissors() {
 
   return (
     <RockPaperScissorsContext value={rockPaperScissors}>
-      <div className="flex flex-col min-h-dvh">
+      <div className="flex flex-col min-h-dvh relative">
         <Navbar />
 
         <main className="flex flex-col p-16 max-w-[850px] mx-auto items-center justify-center grow">
@@ -85,10 +88,107 @@ export function RockPaperScissors() {
         </main>
 
         <Footer />
+
+        <GameRoundAlerts />
+        <LeaderboardAlerts />
       </div>
 
-      <GameRoundAlerts />
+      <Toaster toaster={toaster}>
+        {(toast) => (
+          <Toast.Root
+            key={toast.id}
+            className={twMerge(
+              'z-[var(--z-index)]',
+              'h-[var(--height)]',
+              'scale-[var(--scale)]',
+              'opacity-[var(--opacity)]',
+              'transition-all',
+              'duration-300',
+              '[translate:var(--x)_var(--y)_0]',
+              'z-9999',
+
+              'flex',
+              'items-start',
+              'gap-4',
+              'min-w-[32rem]',
+              'rounded-xl',
+              'bg-teal-900',
+              'py-2.5',
+              'px-3.5',
+            )}
+          >
+            <img
+              src={toast.type === 'success' ? emojiTrophy : emojiMonocle}
+              alt=""
+              className="w-10 h-auto self-center"
+            />
+
+            <div className="grow">
+              <Toast.Title className="font-semibold">{toast.title}</Toast.Title>
+              <Toast.Description className="text-sm text-white/75">
+                {toast.description}
+              </Toast.Description>
+            </div>
+
+            <Toast.CloseTrigger className="text-white/50 hover:text-white/75">
+              <XIcon className="size-5" />
+            </Toast.CloseTrigger>
+          </Toast.Root>
+        )}
+      </Toaster>
     </RockPaperScissorsContext>
+  );
+}
+
+function LeaderboardAlerts() {
+  const rockPaperScissors = useRockPaperScissorsContext();
+
+  const {height, width} = useWindowSize();
+  const [data, setData] = useState<Extract<
+    RockPaperScissorsEvent,
+    {type: 'LEADERBOARD_ACHIEVED'}
+  > | null>(null);
+
+  useTimeout(() => setData(null), data ? 5000 : null);
+
+  useEffect(() => {
+    const unsubscribe = rockPaperScissors.subscribe((event) => {
+      if (event.type === 'LEADERBOARD_ACHIEVED') {
+        setData(event);
+
+        toaster.success({
+          title: 'Leaderboard Achieved',
+          description: 'You have achieved a leaderboard position!',
+        });
+      }
+    });
+
+    return unsubscribe;
+  });
+
+  if (!data) return null;
+
+  return (
+    <Confetti
+      width={width - 32}
+      height={height - 32}
+      numberOfPieces={100}
+      gravity={1}
+      className="mx-4 mt-4"
+      drawShape={(ctx) => {
+        ctx.beginPath();
+
+        for (let i = 0; i < 22; i++) {
+          const angle = 0.35 * i;
+          const x = (0.2 + 1.5 * angle) * Math.cos(angle);
+          const y = (0.2 + 1.5 * angle) * Math.sin(angle);
+          ctx.lineTo(x, y);
+        }
+
+        ctx.stroke();
+        ctx.closePath();
+      }}
+    />
   );
 }
 
@@ -125,32 +225,37 @@ function GameRoundAlerts() {
       <Portal>
         <Dialog.Backdrop className="fixed inset-0 bg-black/25 backdrop-blur-sm ui-open:animate-backdrop-in ui-closed:animate-backdrop-out" />
         <Dialog.Positioner className="fixed inset-0 flex items-center justify-center">
-          <Dialog.Content className="w-[32rem] p-12 text-neutral-800 bg-white rounded-2xl ui-open:animate-dialog-in ui-closed:animate-dialog-out relative shadow-lg">
-            <div className="flex flex-col items-center">
+          <Dialog.Content className="w-[32rem] h-[32rem] p-12 text-neutral-800 bg-white rounded-2xl ui-open:animate-dialog-in ui-closed:animate-dialog-out relative shadow-lg">
+            <div className="flex flex-col h-full items-center">
               {data?.type === 'ROUND_COMPLETE' && (
                 <>
                   {data.status === 'WIN' && (
                     <>
-                      <Confetti width={400} />
-                      <img src={emojiSunGlasses} alt="" className="w-40 h-auto" />
-                      <h2 className="mt-6 text-2xl font-heading font-bold">You won!</h2>
-                      <p className="text-neutral-700">Keep it up!</p>
+                      <img src={emojiTrophy} alt="" className="w-40 h-auto" />
+                      <div className="grow text-center">
+                        <h2 className="mt-8 text-2xl font-heading font-bold">You won!</h2>
+                        <p className="text-neutral-700">Keep it up!</p>
+                      </div>
                     </>
                   )}
 
                   {data.status === 'LOSS' && (
                     <>
-                      <img src={emojiCrying} alt="" className="w-40 h-auto" />
-                      <h2 className="mt-6 text-2xl font-heading font-bold">You Lost!</h2>
-                      <p className="text-neutral-700">Try harder!</p>
+                      <img src={emojiThumbsDown} alt="" className="w-40 h-auto" />
+                      <div className="grow text-center">
+                        <h2 className="mt-8 text-2xl font-heading font-bold">You Lost!</h2>
+                        <p className="text-neutral-700">Try harder!</p>
+                      </div>
                     </>
                   )}
 
                   {data.status === 'TIE' && (
                     <>
-                      <img src={emojiMindBlowing} alt="" className="w-40 h-auto" />
-                      <h2 className="mt-6 text-2xl font-heading font-bold">It's a draw!</h2>
-                      <p className="text-neutral-700">Oooopss!</p>
+                      <img src={emojiHandshake} alt="" className="w-40 h-auto" />
+                      <div className="grow text-center">
+                        <h2 className="mt-8 text-2xl font-heading font-bold">It's a draw!</h2>
+                        <p className="text-neutral-700">Oooopss!</p>
+                      </div>
                     </>
                   )}
 
@@ -169,9 +274,11 @@ function GameRoundAlerts() {
 
               {data?.type === 'GAME_COMPLETE' && (
                 <>
-                  <img src={emojiSunGlasses} alt="" className="w-40 h-auto" />
-                  <h2 className="mt-6 text-2xl font-heading font-bold">Congratulations! 🎉</h2>
-                  <p className="text-neutral-700">You won the game!</p>
+                  <img src={emojiTrophy} alt="" className="w-40 h-auto" />
+                  <div className="grow text-center">
+                    <h2 className="mt-6 text-2xl font-heading font-bold">Congratulations! 🎉</h2>
+                    <p className="text-neutral-700">You won the game!</p>
+                  </div>
 
                   <div className="mt-12 w-full flex gap-4">
                     <button

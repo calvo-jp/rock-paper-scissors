@@ -4,4 +4,5 @@ export const toaster = createToaster({
   placement: 'bottom-end',
   overlap: true,
   max: 5,
+  duration: 5000,
 });

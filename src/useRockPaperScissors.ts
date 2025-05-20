@@ -1,7 +1,7 @@
 import {createContext, useContext, useRef} from 'react';
 import {genConfig} from 'react-nice-avatar';
-import {useLocalStorage} from 'react-use';
 import invariant from 'tiny-invariant';
+import {useLocalStorage} from 'usehooks-ts';
 import {z} from 'zod';
 
 /**
@@ -134,7 +134,6 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     'RockPaperScissors/Leaderboard',
     [],
     {
-      raw: false,
       serializer: (value) => {
         return JSON.stringify(value);
       },
@@ -150,7 +149,6 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
       status: 'WAITING',
     },
     {
-      raw: false,
       serializer: (value) => {
         return JSON.stringify(value);
       },
@@ -159,9 +157,6 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
       },
     },
   );
-
-  invariant(details);
-  invariant(leaderboard);
 
   function startGame(playerName: string) {
     setStatus({
@@ -193,8 +188,6 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
   }
 
   function restartGame() {
-    invariant(details);
-
     if (details.status !== 'FINISHED') return;
 
     subscribers.current.forEach((subscriber) => {
@@ -205,7 +198,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     });
 
     setStatus((prev) => {
-      invariant(prev?.status === 'FINISHED');
+      invariant(prev.status === 'FINISHED');
 
       return {
         status: 'PLAYING',
@@ -221,14 +214,12 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
   }
 
   function updateLeaderboard(value: Details) {
-    invariant(leaderboard);
-
     if (value.status === 'WAITING') return;
 
     if (leaderboard.length < 10) {
       setLeaderboard((prev) => {
         const l = [
-          ...(prev?.filter((entry) => entry.player.id !== value.player.id) ?? []),
+          ...prev.filter((entry) => entry.player.id !== value.player.id),
           {
             player: value.player,
             score: value.score,
@@ -269,7 +260,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     /* 10 maximum leaderboard entries */
     setLeaderboard((prev) => {
       const l = [
-        ...(prev?.filter((entry) => entry.player.id !== value.player.id) ?? []),
+        ...prev.filter((entry) => entry.player.id !== value.player.id),
         {
           player: value.player,
           score: value.score,
@@ -288,15 +279,13 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
   }
 
   function pick(choice: Choice) {
-    invariant(details);
-
     if (details.status !== 'PLAYING') return;
 
     const computerChoice = randomChoice();
 
     if (choice === computerChoice) {
       setStatus((prev) => {
-        invariant(prev?.status === 'PLAYING');
+        invariant(prev.status === 'PLAYING');
 
         return {
           ...prev,
@@ -334,7 +323,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
       (choice === 'SCISSORS' && computerChoice === 'PAPER')
     ) {
       setStatus((prev) => {
-        invariant(prev?.status === 'PLAYING');
+        invariant(prev.status === 'PLAYING');
 
         return {
           ...prev,
@@ -368,7 +357,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
 
     if (details.score.losses >= 3) {
       setStatus((prev) => {
-        invariant(prev?.status === 'PLAYING');
+        invariant(prev.status === 'PLAYING');
 
         return {
           ...prev,
@@ -411,7 +400,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     }
 
     setStatus((prev) => {
-      invariant(prev?.status === 'PLAYING');
+      invariant(prev.status === 'PLAYING');
 
       return {
         ...prev,
