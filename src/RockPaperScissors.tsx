@@ -15,20 +15,24 @@ import {
   UserIcon,
   XIcon,
 } from 'lucide-react';
-import {createContext, useContext, useEffect, useState} from 'react';
+import {createContext, useContext, useEffect, useState, type ComponentProps} from 'react';
 import Confetti from 'react-confetti';
 import CountUp from 'react-countup';
 import {useForm} from 'react-hook-form';
 import Avatar from 'react-nice-avatar';
 import {twMerge} from 'tailwind-merge';
 import invariant from 'tiny-invariant';
+import {useSound} from 'use-sound';
 import {useTimeout, useWindowSize} from 'usehooks-ts';
 import {z} from 'zod';
+import buttonPressAudio from './button-press.mp3';
 import emojiHandshake from './emoji-handshake.gif';
 import emojiMonocle from './emoji-monocle.gif';
 import emojiSkull from './emoji-skull.gif';
 import emojiThumbsDown from './emoji-thumbs-down.gif';
 import emojiTrophy from './emoji-trophy.gif';
+import gameOverAudio from './game-over.mp3';
+import gameWinAudio from './game-win.mp3';
 import {PaperIcon} from './PaperIcon';
 import {RockIcon} from './RockIcon';
 import {ScissorsIcon} from './ScissorsIcon';
@@ -53,33 +57,30 @@ export function RockPaperScissors() {
         <main className="flex flex-col p-16 max-w-[850px] mx-auto items-center justify-center grow">
           <h1 className="text-5xl font-bold font-heading">Rock Paper Scissors</h1>
           <nav className="mt-32 grid grid-cols-3 gap-10">
-            <button
-              type="button"
+            <Button
               className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200 disabled:cursor-default"
               aria-label="Rock"
               disabled={rockPaperScissors.details.status !== 'PLAYING'}
               onClick={() => rockPaperScissors.pick('ROCK')}
             >
               <RockIcon className="w-full aspect-square text-teal-100" />
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200 disabled:cursor-default"
               aria-label="Paper"
               disabled={rockPaperScissors.details.status !== 'PLAYING'}
               onClick={() => rockPaperScissors.pick('PAPER')}
             >
               <PaperIcon className="w-full aspect-square text-teal-100" />
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200 disabled:cursor-default"
               aria-label="Scissors"
               disabled={rockPaperScissors.details.status !== 'PLAYING'}
               onClick={() => rockPaperScissors.pick('SCISSORS')}
             >
               <ScissorsIcon className="w-full aspect-square text-teal-100" />
-            </button>
+            </Button>
           </nav>
 
           <div className="mt-28 w-full">
@@ -195,6 +196,8 @@ function LeaderboardAlerts() {
 
 function GameRoundAlerts() {
   const rockPaperScissors = useRockPaperScissorsContext();
+  const [playGameOverSound] = useSound(gameOverAudio);
+  const [playGameWinSound] = useSound(gameWinAudio);
 
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<Extract<
@@ -207,11 +210,21 @@ function GameRoundAlerts() {
       if (event.type === 'ROUND_COMPLETE' || event.type === 'GAME_COMPLETE') {
         setData(event);
         setOpen(true);
+
+        if (event.type === 'GAME_COMPLETE') {
+          playGameOverSound();
+        }
+
+        if (event.type === 'ROUND_COMPLETE') {
+          if (event.status === 'WIN') {
+            playGameWinSound();
+          }
+        }
       }
     });
 
     return unsubscribe;
-  }, [rockPaperScissors]);
+  }, [playGameOverSound, playGameWinSound, rockPaperScissors]);
 
   return (
     <Dialog.Root
@@ -264,8 +277,9 @@ function GameRoundAlerts() {
                       setOpen(false);
                     }}
                     className="text-lg rounded-full font-bold font-heading text-teal-700 h-14 block w-full bg-teal-100"
+                    asChild
                   >
-                    Okay
+                    <Button>Okay</Button>
                   </Dialog.CloseTrigger>
                 </>
               )}
@@ -280,16 +294,20 @@ function GameRoundAlerts() {
                   </div>
 
                   <div className="w-full flex gap-4">
-                    <Dialog.CloseTrigger className="text-lg rounded-full font-bold font-heading text-teal-700 h-14 block w-full bg-teal-100">
-                      Close
+                    <Dialog.CloseTrigger
+                      className="text-lg rounded-full font-bold font-heading text-teal-700 h-14 block w-full bg-teal-100"
+                      asChild
+                    >
+                      <Button>Close</Button>
                     </Dialog.CloseTrigger>
                     <Dialog.CloseTrigger
                       onClick={() => {
                         rockPaperScissors.restartGame();
                       }}
                       className="text-lg rounded-full font-bold font-heading bg-teal-900 text-white h-14 block w-full"
+                      asChild
                     >
-                      Retry
+                      <Button>Retry</Button>
                     </Dialog.CloseTrigger>
                   </div>
                 </>
@@ -320,8 +338,7 @@ function GameStatus() {
           <span className="font-bold text-2xl leading-none">{rockPaperScissors.details.round}</span>
         </div>
       ) : (
-        <button
-          type="button"
+        <Button
           className={twMerge(
             'w-fit mx-auto px-6 py-3 text-xl bg-teal-800/15 flex items-center justify-center gap-2 rounded-full font-heading font-bold ui-not-open:animate-bounce',
             rockPaperScissors.details.status !== 'FINISHED' && 'hidden',
@@ -332,7 +349,7 @@ function GameStatus() {
         >
           <RefreshCcwIcon className="size-7" />
           Play Again!
-        </button>
+        </Button>
       )}
 
       <div className="flex gap-3 items-center">
@@ -415,16 +432,24 @@ function PlayGame() {
           'w-fit mx-auto px-6 py-3 text-xl bg-teal-800/15 flex items-center justify-center gap-2 rounded-full font-heading font-bold ui-not-open:animate-bounce',
           rockPaperScissors.details.status !== 'WAITING' && 'hidden',
         )}
+        asChild
       >
-        <Gamepad2Icon className="size-7" />
-        Play Now!
+        <Button>
+          <Gamepad2Icon className="size-7" />
+          Play Now!
+        </Button>
       </Dialog.Trigger>
       <Portal>
         <Dialog.Backdrop className="fixed inset-0 bg-black/25 backdrop-blur-sm ui-open:animate-backdrop-in ui-closed:animate-backdrop-out" />
         <Dialog.Positioner className="fixed inset-0 flex items-center justify-center">
           <Dialog.Content className="w-[32rem] p-12 bg-teal-900 rounded-2xl ui-open:animate-dialog-in ui-closed:animate-dialog-out relative shadow-lg">
-            <Dialog.CloseTrigger className="absolute -top-10 -right-10 bg-white/10 p-2 rounded-full hover:">
-              <XIcon className="size-6" />
+            <Dialog.CloseTrigger
+              className="absolute -top-10 -right-10 bg-white/10 p-2 rounded-full"
+              asChild
+            >
+              <Button>
+                <XIcon className="size-6" />
+              </Button>
             </Dialog.CloseTrigger>
 
             <ScissorsLineDashed className="size-10 text-white/75" />
@@ -449,9 +474,12 @@ function PlayGame() {
                       {form.formState.errors.name?.message}
                     </Field.ErrorText>
                   </Field.Root>
-                  <button className="font-heading block w-full h-14 mt-8 bg-white rounded-full text-teal-800 font-bold text-lg">
+                  <Button
+                    type="submit"
+                    className="font-heading block w-full h-14 mt-8 bg-white rounded-full text-teal-800 font-bold text-lg"
+                  >
                     Play Now
-                  </button>
+                  </Button>
                 </form>
               )}
             </Dialog.Context>
@@ -508,8 +536,11 @@ function UserMenu() {
       <Menu.Trigger
         disabled={rockPaperScissors.details.status === 'WAITING'}
         className="disabled:cursor-not-allowed disabled:opacity-75"
+        asChild
       >
-        <Settings className="size-5" />
+        <Button>
+          <Settings className="size-5" />
+        </Button>
       </Menu.Trigger>
       <Portal>
         <Menu.Positioner>
@@ -544,8 +575,10 @@ function Leaderboard() {
     <Dialog.Root lazyMount unmountOnExit>
       <Tooltip.Root openDelay={0} closeDelay={0}>
         <Tooltip.Trigger asChild>
-          <Dialog.Trigger aria-label="Leaderboard">
-            <MedalIcon className="size-5" />
+          <Dialog.Trigger aria-label="Leaderboard" asChild>
+            <Button>
+              <MedalIcon className="size-5" />
+            </Button>
           </Dialog.Trigger>
         </Tooltip.Trigger>
         <Tooltip.Positioner>
@@ -629,5 +662,22 @@ function Footer() {
         by <span className="font-bold">BSIS-1B</span>
       </p>
     </footer>
+  );
+}
+
+function Button({onClick, children, ...props}: ComponentProps<'button'>) {
+  const [play] = useSound(buttonPressAudio);
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        play({forceSoundEnabled: true});
+        onClick?.(e);
+      }}
+      {...props}
+    >
+      {children}
+    </button>
   );
 }
