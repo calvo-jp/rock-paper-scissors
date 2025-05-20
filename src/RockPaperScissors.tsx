@@ -67,17 +67,6 @@ export function RockPaperScissors() {
         </main>
 
         <Footer />
-
-        <button
-          onClick={() => {
-            toaster.success({
-              title: 'Test',
-              description: 'This is a test notification',
-            });
-          }}
-        >
-          test
-        </button>
       </div>
 
       <GameRoundAlerts />
