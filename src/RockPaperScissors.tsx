@@ -35,6 +35,7 @@ import gameDrawAudio from './game-draw.wav';
 import gameLoseAudio from './game-lose.mp3';
 import gameOverAudio from './game-over.mp3';
 import gameWinAudio from './game-win.wav';
+import notificationAudio from './notification.wav';
 
 import {PaperIcon} from './PaperIcon';
 import {RockIcon} from './RockIcon';
@@ -147,6 +148,9 @@ export function RockPaperScissors() {
 
 function LeaderboardAlerts() {
   const rockPaperScissors = useRockPaperScissorsContext();
+  const [playNotificationSound] = useSound(notificationAudio, {
+    soundEnabled: false,
+  });
 
   const {height, width} = useWindowSize();
   const [data, setData] = useState<Extract<
@@ -164,6 +168,10 @@ function LeaderboardAlerts() {
         toaster.success({
           title: 'Leaderboard Achieved',
           description: 'You have achieved a leaderboard position!',
+        });
+
+        playNotificationSound({
+          forceSoundEnabled: true,
         });
       }
     });
@@ -217,20 +225,20 @@ function GameRoundAlerts() {
         setOpen(true);
 
         if (event.type === 'GAME_COMPLETE') {
-          playGameOverSound();
+          playGameOverSound({forceSoundEnabled: true});
         }
 
         if (event.type === 'ROUND_COMPLETE') {
           if (event.status === 'WIN') {
-            playGameWinSound();
+            playGameWinSound({forceSoundEnabled: true});
           }
 
           if (event.status === 'LOSS') {
-            playGameLoseSound();
+            playGameLoseSound({forceSoundEnabled: true});
           }
 
           if (event.status === 'TIE') {
-            playGameDrawSound();
+            playGameDrawSound({forceSoundEnabled: true});
           }
         }
       }
