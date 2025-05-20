@@ -1,4 +1,4 @@
-import {createContext, useContext, useRef} from 'react';
+import {useRef} from 'react';
 import {genConfig} from 'react-nice-avatar';
 import invariant from 'tiny-invariant';
 import {useLocalStorage} from 'usehooks-ts';
@@ -151,7 +151,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
   );
 
   const [details, setStatus] = useLocalStorage<Details>(
-    'RockPaperScissors/Details',
+    'RockPaperScissors/GameDetails',
     {
       status: 'WAITING',
     },
@@ -453,10 +453,3 @@ function randomChoice() {
   const choices: Choice[] = ['ROCK', 'PAPER', 'SCISSORS'];
   return choices[Math.floor(Math.random() * choices.length)];
 }
-
-export const RockPaperScissorsContext = createContext<UseRockPaperScissorsReturn | null>(null);
-export const useRockPaperScissorsContext = () => {
-  const context = useContext(RockPaperScissorsContext);
-  invariant(context);
-  return context;
-};
