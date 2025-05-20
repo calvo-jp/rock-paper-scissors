@@ -1,4 +1,4 @@
-import {Dialog, Field, Menu, Portal, Toast, Toaster, Tooltip} from '@ark-ui/react';
+import {createToaster, Dialog, Field, Menu, Portal, Toast, Toaster, Tooltip} from '@ark-ui/react';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {
   CopyrightIcon,
@@ -25,22 +25,20 @@ import invariant from 'tiny-invariant';
 import {useSound} from 'use-sound';
 import {useTimeout, useWindowSize} from 'usehooks-ts';
 import {z} from 'zod';
-import buttonPressAudio from './button-press.mp3';
-import emojiHandshake from './emoji-handshake.gif';
-import emojiMonocle from './emoji-monocle.gif';
-import emojiSkull from './emoji-skull.gif';
-import emojiThumbsDown from './emoji-thumbs-down.gif';
-import emojiTrophy from './emoji-trophy.gif';
-import gameDrawAudio from './game-draw.wav';
-import gameLoseAudio from './game-lose.mp3';
-import gameOverAudio from './game-over.mp3';
-import gameWinAudio from './game-win.wav';
-import notificationAudio from './notification.wav';
-
+import buttonPressAudio from './assets/button-press.mp3';
+import emojiHandshake from './assets/emoji-handshake.gif';
+import emojiMonocle from './assets/emoji-monocle.gif';
+import emojiSkull from './assets/emoji-skull.gif';
+import emojiThumbsDown from './assets/emoji-thumbs-down.gif';
+import emojiTrophy from './assets/emoji-trophy.gif';
+import gameDrawAudio from './assets/game-draw.wav';
+import gameLoseAudio from './assets/game-lose.mp3';
+import gameOverAudio from './assets/game-over.mp3';
+import gameWinAudio from './assets/game-win.wav';
+import notificationAudio from './assets/notification.wav';
 import {PaperIcon} from './PaperIcon';
 import {RockIcon} from './RockIcon';
 import {ScissorsIcon} from './ScissorsIcon';
-import {toaster} from './toaster';
 import {
   RockPaperScissorsContext,
   useRockPaperScissors,
@@ -49,6 +47,13 @@ import {
   type RockPaperScissorsEvent,
   type Score,
 } from './useRockPaperScissors';
+
+const toaster = createToaster({
+  placement: 'bottom-end',
+  overlap: true,
+  max: 5,
+  duration: 5000,
+});
 
 export function RockPaperScissors() {
   const rockPaperScissors = useRockPaperScissors();
