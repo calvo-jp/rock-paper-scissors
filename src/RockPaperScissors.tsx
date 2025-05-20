@@ -632,7 +632,7 @@ function Leaderboard() {
             </Dialog.Title>
             <div className="mt-5">
               {rockPaperScissors.leaderboard.map((entry) => (
-                <LeaderboardItemContext value={entry}>
+                <LeaderboardItemContext key={entry.player.id} value={entry}>
                   <LeaderboardItem />
                 </LeaderboardItemContext>
               ))}
