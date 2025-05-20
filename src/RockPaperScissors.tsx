@@ -69,24 +69,48 @@ export function RockPaperScissors() {
             <Button
               className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200 disabled:cursor-default"
               aria-label="Rock"
-              disabled={rockPaperScissors.details.status !== 'PLAYING'}
-              onClick={() => rockPaperScissors.pick('ROCK')}
+              onClick={() => {
+                if (rockPaperScissors.details.status === 'PLAYING') {
+                  rockPaperScissors.pick('ROCK');
+                  return;
+                }
+
+                if (rockPaperScissors.details.status === 'WAITING') {
+                  rockPaperScissors.triggerEvent({type: 'GAME_REQUEST'});
+                }
+              }}
             >
               <RockIcon className="w-full aspect-square text-teal-100" />
             </Button>
             <Button
               className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200 disabled:cursor-default"
               aria-label="Paper"
-              disabled={rockPaperScissors.details.status !== 'PLAYING'}
-              onClick={() => rockPaperScissors.pick('PAPER')}
+              onClick={() => {
+                if (rockPaperScissors.details.status === 'PLAYING') {
+                  rockPaperScissors.pick('PAPER');
+                  return;
+                }
+
+                if (rockPaperScissors.details.status === 'WAITING') {
+                  rockPaperScissors.triggerEvent({type: 'GAME_REQUEST'});
+                }
+              }}
             >
               <PaperIcon className="w-full aspect-square text-teal-100" />
             </Button>
             <Button
               className="w-full p-4 bg-teal-800/15 rounded-full hover:scale-110 transition-transform duration-200 disabled:cursor-default"
               aria-label="Scissors"
-              disabled={rockPaperScissors.details.status !== 'PLAYING'}
-              onClick={() => rockPaperScissors.pick('SCISSORS')}
+              onClick={() => {
+                if (rockPaperScissors.details.status === 'PLAYING') {
+                  rockPaperScissors.pick('SCISSORS');
+                  return;
+                }
+
+                if (rockPaperScissors.details.status === 'WAITING') {
+                  rockPaperScissors.triggerEvent({type: 'GAME_REQUEST'});
+                }
+              }}
             >
               <ScissorsIcon className="w-full aspect-square text-teal-100" />
             </Button>
@@ -441,6 +465,8 @@ function PlayGame() {
       }),
   });
 
+  const [open, setOpen] = useState(false);
+
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -448,9 +474,22 @@ function PlayGame() {
     },
   });
 
+  useEffect(() => {
+    const unsubscribe = rockPaperScissors.subscribe((event) => {
+      if (event.type === 'GAME_REQUEST') {
+        setOpen(true);
+      }
+    });
+
+    return unsubscribe;
+  }, [rockPaperScissors]);
+
   return (
     <Dialog.Root
+      open={open}
       onOpenChange={(details) => {
+        setOpen(details.open);
+
         if (details.open) {
           form.setFocus('name');
         } else {

@@ -117,6 +117,7 @@ export interface UseRockPaperScissorsReturn {
   details: Details;
   leaderboard: LeaderboardEntry[];
   subscribe: (subscriber: Subscriber) => () => void;
+  triggerEvent: (event: RockPaperScissorsEvent) => void;
 }
 
 export function useRockPaperScissors(): UseRockPaperScissorsReturn {
@@ -128,6 +129,12 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     return () => {
       subscribers.current = subscribers.current.filter((s) => s !== subscriber);
     };
+  }
+
+  function triggerEvent(event: RockPaperScissorsEvent) {
+    subscribers.current.forEach((subscriber) => {
+      subscriber(event);
+    });
   }
 
   const [leaderboard, setLeaderboard] = useLocalStorage<LeaderboardEntry[]>(
@@ -176,25 +183,16 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
   }
 
   function endGame() {
-    setStatus({
-      status: 'WAITING',
-    });
-
-    subscribers.current.forEach((subscriber) => {
-      subscriber({
-        type: 'GAME_ENDED',
-      });
-    });
+    setStatus({status: 'WAITING'});
+    triggerEvent({type: 'GAME_ENDED'});
   }
 
   function restartGame() {
     if (details.status !== 'FINISHED') return;
 
-    subscribers.current.forEach((subscriber) => {
-      subscriber({
-        type: 'GAME_RESTARTED',
-        details,
-      });
+    triggerEvent({
+      type: 'GAME_RESTARTED',
+      details,
     });
 
     setStatus((prev) => {
@@ -210,6 +208,10 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
           ties: 0,
         },
       };
+    });
+
+    setLeaderboard((prev) => {
+      return prev.filter((entry) => entry.player.id !== details.player.id);
     });
   }
 
@@ -249,11 +251,9 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
 
     if (!shouldAddToLeaderboard) return;
     if (!isOnLeaderboard) {
-      subscribers.current.forEach((subscriber) => {
-        subscriber({
-          type: 'LEADERBOARD_ACHIEVED',
-          details: value,
-        });
+      triggerEvent({
+        type: 'LEADERBOARD_ACHIEVED',
+        details: value,
       });
     }
 
@@ -306,12 +306,17 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
         },
       });
 
-      subscribers.current.forEach((subscriber) => {
-        subscriber({
-          type: 'ROUND_COMPLETE',
-          status: 'TIE',
-          details,
-        });
+      triggerEvent({
+        type: 'ROUND_COMPLETE',
+        status: 'TIE',
+        details: {
+          ...details,
+          round: details.round + 1,
+          score: {
+            ...details.score,
+            ties: details.score.ties + 1,
+          },
+        },
       });
 
       return;
@@ -344,12 +349,17 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
         },
       });
 
-      subscribers.current.forEach((subscriber) => {
-        subscriber({
-          type: 'ROUND_COMPLETE',
-          status: 'WIN',
-          details,
-        });
+      triggerEvent({
+        type: 'ROUND_COMPLETE',
+        status: 'WIN',
+        details: {
+          ...details,
+          round: details.round + 1,
+          score: {
+            ...details.score,
+            wins: details.score.wins + 1,
+          },
+        },
       });
 
       return;
@@ -380,20 +390,18 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
         },
       });
 
-      subscribers.current.forEach((subscriber) => {
-        subscriber({
-          type: 'GAME_COMPLETE',
-          status: 'LOSS',
-          details: {
-            ...details,
-            status: 'FINISHED',
-            round: details.round + 1,
-            score: {
-              ...details.score,
-              losses: 3,
-            },
+      triggerEvent({
+        type: 'GAME_COMPLETE',
+        status: 'LOSS',
+        details: {
+          ...details,
+          status: 'FINISHED',
+          round: details.round + 1,
+          score: {
+            ...details.score,
+            losses: 3,
           },
-        });
+        },
       });
 
       return;
@@ -437,6 +445,7 @@ export function useRockPaperScissors(): UseRockPaperScissorsReturn {
     details,
     leaderboard,
     subscribe,
+    triggerEvent,
   };
 }
 
