@@ -31,8 +31,11 @@ import emojiMonocle from './emoji-monocle.gif';
 import emojiSkull from './emoji-skull.gif';
 import emojiThumbsDown from './emoji-thumbs-down.gif';
 import emojiTrophy from './emoji-trophy.gif';
+import gameDrawAudio from './game-draw.wav';
+import gameLoseAudio from './game-lose.mp3';
 import gameOverAudio from './game-over.mp3';
-import gameWinAudio from './game-win.mp3';
+import gameWinAudio from './game-win.wav';
+
 import {PaperIcon} from './PaperIcon';
 import {RockIcon} from './RockIcon';
 import {ScissorsIcon} from './ScissorsIcon';
@@ -196,8 +199,10 @@ function LeaderboardAlerts() {
 
 function GameRoundAlerts() {
   const rockPaperScissors = useRockPaperScissorsContext();
-  const [playGameOverSound] = useSound(gameOverAudio);
+  const [playGameOverSound, gameOverSound] = useSound(gameOverAudio);
   const [playGameWinSound] = useSound(gameWinAudio);
+  const [playGameLoseSound] = useSound(gameLoseAudio);
+  const [playGameDrawSound] = useSound(gameDrawAudio);
 
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<Extract<
@@ -219,12 +224,26 @@ function GameRoundAlerts() {
           if (event.status === 'WIN') {
             playGameWinSound();
           }
+
+          if (event.status === 'LOSS') {
+            playGameLoseSound();
+          }
+
+          if (event.status === 'TIE') {
+            playGameDrawSound();
+          }
         }
       }
     });
 
     return unsubscribe;
-  }, [playGameOverSound, playGameWinSound, rockPaperScissors]);
+  }, [
+    playGameDrawSound,
+    playGameLoseSound,
+    playGameOverSound,
+    playGameWinSound,
+    rockPaperScissors,
+  ]);
 
   return (
     <Dialog.Root
@@ -303,6 +322,7 @@ function GameRoundAlerts() {
                     <Dialog.CloseTrigger
                       onClick={() => {
                         rockPaperScissors.restartGame();
+                        gameOverSound.stop();
                       }}
                       className="text-lg rounded-full font-bold font-heading bg-teal-900 text-white h-14 block w-full"
                       asChild
