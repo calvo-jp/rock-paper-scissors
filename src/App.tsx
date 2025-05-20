@@ -14,7 +14,9 @@ import {useTheme} from './useTheme';
 export function App() {
   const theme = useTheme();
   const toasts = useRef<string[]>([]);
-  const [playNotificationSound] = useSound(notificationAudio);
+  const [playNotificationSound] = useSound(notificationAudio, {
+    volume: 0.75,
+  });
 
   useEffect(() => {
     return toaster.subscribe((args) => {

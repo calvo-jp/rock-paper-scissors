@@ -252,10 +252,11 @@ function StartGame() {
 
 function GameRoundAlerts() {
   const rockPaperScissors = useRockPaperScissorsContext();
-  const [playGameOverSound, gameOverSound] = useSound(gameOverAudio);
-  const [playGameWinSound] = useSound(gameWinAudio);
-  const [playGameLoseSound] = useSound(gameLoseAudio);
-  const [playGameDrawSound] = useSound(gameDrawAudio);
+
+  const [playGameOverSound, gameOverSound] = useSound(gameOverAudio, {volume: 0.75});
+  const [playGameWinSound] = useSound(gameWinAudio, {volume: 0.75});
+  const [playGameLoseSound] = useSound(gameLoseAudio, {volume: 0.75});
+  const [playGameDrawSound] = useSound(gameDrawAudio, {volume: 0.75});
 
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<Extract<
