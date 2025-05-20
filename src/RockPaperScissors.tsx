@@ -63,7 +63,7 @@ export function RockPaperScissors() {
       <div className="flex flex-col min-h-dvh relative">
         <Navbar />
 
-        <main className="flex flex-col p-16 max-w-[850px] mx-auto items-center justify-center grow">
+        <main className="flex flex-col p-8 lg:p-16 w-[850px] max-w-full mx-auto items-center justify-center grow">
           <h1 className="text-5xl font-bold font-heading">Rock Paper Scissors</h1>
           <nav className="mt-32 grid grid-cols-3 gap-10">
             <Button
