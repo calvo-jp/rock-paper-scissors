@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@plugin 'tailwindcss-plugin-zag';
+@plugin 'tailwind-zag';
 
 @theme {
   --font-heading: 'Lato', --apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
